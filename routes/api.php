@@ -6,15 +6,11 @@ use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\GreetingController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\StickerController;
-use App\Http\Controllers\VoiceCounterController;
-use App\Http\Controllers\VideoCounterController;
 
 Route::post('/telegram/webhook', function (Request $request) {
     $greetingController = app(GreetingController::class);
     $keywordController = app(KeywordController::class);
     $stickerController = app(StickerController::class);
-    $voiceCounterController = app(VoiceCounterController::class);
-    $videoCounterController = app(VideoCounterController::class);
 
     $update = $greetingController->telegram->getWebhookUpdate();
 
@@ -37,30 +33,6 @@ Route::post('/telegram/webhook', function (Request $request) {
         if ($keywordController->handle($chat_id, $message_text, $message_id)) {
             return response()->json(['status' => 'key_word']);
         }
-    }
-
-    // ответы на голосовые сообщения
-    if (isset($update['message']['voice'])) {
-        $chat_id = $update['message']['chat']['id'];
-        $message_id = $update['message']['message_id'];
-
-        if ($voiceCounterController->handle($chat_id, $message_id)) {
-            return response()->json(['status' => 'voice_reacted']);
-        }
-
-        return response()->json(['status' => 'voice_skipped']);
-    }
-
-    // ответы на видеокругляши
-    if (isset($update['message']['video_note'])) {
-        $chat_id = $update['message']['chat']['id'];
-        $message_id = $update['message']['message_id'];
-
-        if ($videoCounterController->handle($chat_id, $message_id)) {
-            return response()->json(['status' => 'video_reacted']);
-        }
-
-        return response()->json(['status' => 'video_note_skipped']);
     }
 
     return response()->json(['status' => 'ok']);
